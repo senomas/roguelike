@@ -114,8 +114,8 @@ func add_random_connection(stone_graph : AStar, room_graph : AStar):
 	for position in path:
 		set_tile(position.x, position.y, DungeonTile.Floor)
 
-	print(start_room_id, " - ", end_room_id)
 	room_graph.connect_points(start_room_id, end_room_id)
+
 
 func get_least_connected_point(graph : AStar):
 	var point_ids = graph.get_points()
@@ -124,13 +124,13 @@ func get_least_connected_point(graph : AStar):
 	var tied_for_least = []
 	
 	for point in point_ids:
-		var count = graph.get_point_connections(point)
+		var count = graph.get_point_connections(point).size()
 		if !least || least < count:
 			least = count
 			tied_for_least = [point]
 		elif least == count:
 			tied_for_least.append(point)
-	
+			
 	return tied_for_least[randi() % tied_for_least.size()]
 
 
@@ -163,12 +163,25 @@ func pick_random_door_location(room: Rect2):
 	var options = []
 	
 	for x in range(room.position.x + 1, room.end.x - 2):
-		options.append(Vector3(x, room.position.y, 0))
-		options.append(Vector3(x, room.end.y - 1, 0))
+		if map[x - 1][room.position.y] == DungeonTile.Wall && map[x + 1][room.position.y] == DungeonTile.Wall:
+			options.append(Vector3(x, room.position.y, 0))
+		if map[x - 1][room.end.y - 1] == DungeonTile.Wall && map[x + 1][room.end.y - 1] == DungeonTile.Wall:
+			options.append(Vector3(x, room.end.y - 1, 0))
 
 	for y in range(room.position.y + 1, room.end.y - 2):
-		options.append(Vector3(room.position.x, y, 0))
-		options.append(Vector3(room.end.x - 1, y, 0))
+		if map[room.position.x][y - 1] == DungeonTile.Wall && map[room.position.x][y + 1] == DungeonTile.Wall:
+			options.append(Vector3(room.position.x, y, 0))
+		if map[room.end.x - 1][y - 1] == DungeonTile.Wall && map[room.end.x - 1][y + 1] == DungeonTile.Wall:
+			options.append(Vector3(room.end.x - 1, y, 0))
+
+	if options.size() == 0:
+		for x in range(room.position.x + 1, room.end.x - 2):
+			options.append(Vector3(x, room.position.y, 0))
+			options.append(Vector3(x, room.end.y - 1, 0))
+
+		for y in range(room.position.y + 1, room.end.y - 2):
+			options.append(Vector3(room.position.x, y, 0))
+			options.append(Vector3(room.end.x - 1, y, 0))
 
 	return options[randi() % options.size()]
 

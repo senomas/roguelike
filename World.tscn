@@ -105,7 +105,6 @@ format = 1
 
 [node name="player" type="Sprite" parent="."]
 position = Vector2( 352, 192 )
-scale = Vector2( 1, 1 )
 texture = ExtResource( 7 )
 centered = false
 
