@@ -34,6 +34,36 @@ func _ready():
 	build_level()
 
 
+func _input(event):
+	if !event.is_pressed():
+		return
+
+	if event.is_action("ui_left"):
+		try_move(-1, 0)
+	elif event.is_action("ui_right"):
+		try_move(1, 0)
+	elif event.is_action("ui_up"):
+		try_move(0, -1)
+	elif event.is_action("ui_down"):
+		try_move(0, 1)
+
+
+func try_move(dx: int, dy: int):
+	var x = player_tile.x + dx
+	var y = player_tile.y + dy
+	
+	var tile_type = DungeonTile.Stone
+	if x >= 0 && x < level_size.x && y >= 0 && level_size.y:
+		tile_type = map[x][y]
+	
+	match tile_type:
+		DungeonTile.Floor:
+			player_tile = Vector2(x, y)
+		DungeonTile.Door:
+			set_tile(x, y, DungeonTile.Floor)
+	update_visuals()
+
+
 func build_level():
 	rooms.clear()
 	map.clear()
@@ -55,6 +85,16 @@ func build_level():
 			break
 
 	connect_rooms()
+	
+	var start_room = rooms.front()
+	var player_x = start_room.position.x + 1 + randi() % int(start_room.size.x - 2)
+	var player_y = start_room.position.y + 1 + randi() % int(start_room.size.y - 2)
+	player_tile = Vector2(player_x, player_y)
+	update_visuals()
+
+
+func update_visuals():
+	player.position = player_tile * TILE_SIZE
 
 
 func connect_rooms():
@@ -233,10 +273,10 @@ func cut_regions(free_regions, region_to_remove):
 		if region.intersects(region_to_remove):
 			removal_queue.append(region)
 		
-			var leftover_left = region_to_remove.position.x - region.position.x - 2
-			var leftover_right = region.end.x - region_to_remove.end.x - 2
-			var leftover_top = region_to_remove.position.y - region.position.y - 2
-			var leftover_bottom = region.end.y - region_to_remove.end.y - 2
+			var leftover_left = region_to_remove.position.x - region.position.x - 1
+			var leftover_right = region.end.x - region_to_remove.end.x - 1
+			var leftover_top = region_to_remove.position.y - region.position.y - 1
+			var leftover_bottom = region.end.y - region_to_remove.end.y - 1
 			
 			if leftover_left >= MIN_ROOM_DIMENSION:
 				addition_queue.append(Rect2(region.position, Vector2(leftover_left, region.size.y)))
@@ -256,4 +296,6 @@ func cut_regions(free_regions, region_to_remove):
 func set_tile(x, y, type):
 	map[x][y] = type
 	dungeon.set_cell(x, y, type)
+
+
 

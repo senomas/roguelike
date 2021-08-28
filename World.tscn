@@ -115,7 +115,7 @@ current = true
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
 [node name="ColorRect" type="ColorRect" parent="CanvasLayer"]
-margin_right = 512.0
+margin_right = 960.0
 margin_bottom = 32.0
 color = Color( 0.101961, 0.101961, 0.101961, 0.713726 )
 __meta__ = {
