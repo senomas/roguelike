@@ -139,8 +139,8 @@ func add_random_connection(stone_graph : AStar, room_graph : AStar):
 	var start_room_id = get_least_connected_point(room_graph)
 	var end_room_id = get_nearest_unconnected_point(room_graph, start_room_id)
 	
-	var start_position = pick_random_door_location(rooms[start_room_id])
-	var end_position = pick_random_door_location(rooms[end_room_id])
+	var start_position = pick_random_door_location(rooms[start_room_id], rooms[end_room_id])
+	var end_position = pick_random_door_location(rooms[end_room_id], rooms[start_room_id])
 
 	var closest_start_point = stone_graph.get_closest_point(start_position)
 	var closest_end_point = stone_graph.get_closest_point(end_position)
@@ -199,19 +199,22 @@ func get_nearest_unconnected_point(graph : AStar, target_point):
 	return tied_for_nearest[randi() % tied_for_nearest.size()]
 
 
-func pick_random_door_location(room: Rect2):
+func pick_random_door_location(room: Rect2, dest: Rect2):
 	var options = []
 	
+	var is_left = dest.position.x < room.position.x
+	var is_above = dest.position.y < room.position.y
+	
 	for x in range(room.position.x + 1, room.end.x - 2):
-		if map[x - 1][room.position.y] == DungeonTile.Wall && map[x + 1][room.position.y] == DungeonTile.Wall:
+		if is_above && map[x - 1][room.position.y] == DungeonTile.Wall && map[x + 1][room.position.y] == DungeonTile.Wall:
 			options.append(Vector3(x, room.position.y, 0))
-		if map[x - 1][room.end.y - 1] == DungeonTile.Wall && map[x + 1][room.end.y - 1] == DungeonTile.Wall:
+		if !is_above && map[x - 1][room.end.y - 1] == DungeonTile.Wall && map[x + 1][room.end.y - 1] == DungeonTile.Wall:
 			options.append(Vector3(x, room.end.y - 1, 0))
 
 	for y in range(room.position.y + 1, room.end.y - 2):
-		if map[room.position.x][y - 1] == DungeonTile.Wall && map[room.position.x][y + 1] == DungeonTile.Wall:
+		if is_left && map[room.position.x][y - 1] == DungeonTile.Wall && map[room.position.x][y + 1] == DungeonTile.Wall:
 			options.append(Vector3(room.position.x, y, 0))
-		if map[room.end.x - 1][y - 1] == DungeonTile.Wall && map[room.end.x - 1][y + 1] == DungeonTile.Wall:
+		if !is_left && map[room.end.x - 1][y - 1] == DungeonTile.Wall && map[room.end.x - 1][y + 1] == DungeonTile.Wall:
 			options.append(Vector3(room.end.x - 1, y, 0))
 
 	if options.size() == 0:
@@ -278,14 +281,14 @@ func cut_regions(free_regions, region_to_remove):
 			var leftover_top = region_to_remove.position.y - region.position.y - 1
 			var leftover_bottom = region.end.y - region_to_remove.end.y - 1
 			
-			if leftover_left >= MIN_ROOM_DIMENSION:
+			if leftover_left > MIN_ROOM_DIMENSION:
 				addition_queue.append(Rect2(region.position, Vector2(leftover_left, region.size.y)))
-			if leftover_right >= MIN_ROOM_DIMENSION:
+			if leftover_right > MIN_ROOM_DIMENSION:
 				addition_queue.append(Rect2(Vector2(region_to_remove.end.x + 1, region.position.y), Vector2(leftover_right, region.size.y)))
-			if leftover_top >= MIN_ROOM_DIMENSION:
+			if leftover_top > MIN_ROOM_DIMENSION:
 				addition_queue.append(Rect2(region.position, Vector2(region.size.x, leftover_top)))
-			if leftover_bottom >= MIN_ROOM_DIMENSION:
-				addition_queue.append(Rect2(Vector2(region.position.x, region_to_remove.end.y), Vector2(region.size.x, leftover_bottom)))
+			if leftover_bottom > MIN_ROOM_DIMENSION:
+				addition_queue.append(Rect2(Vector2(region.position.x, region_to_remove.end.y + 1), Vector2(region.size.x, leftover_bottom)))
 	
 	for region in removal_queue:
 		free_regions.erase(region)
